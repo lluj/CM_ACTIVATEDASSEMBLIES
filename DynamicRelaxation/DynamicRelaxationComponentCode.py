@@ -1,26 +1,27 @@
 import Rhino # this is all the Rhino common classes and stuff (documentation here: http://4.rhino3d.com/5/rhinocommon/)
 import rhinoscriptsyntax as rs
+
 import sys
-#import DynamicRelaxationFaster as DynamicRelaxation
+
 import DynamicRelaxation
-from PreSpecMaterials import Materials
+from DynamicRelaxationPreSpecMaterials import Materials
+
 import itertools
+import System.Guid
+
 import clr
 clr.AddReference("Grasshopper")
 from Grasshopper.Kernel.Data import GH_Path
 from Grasshopper import DataTree
-import System.Guid
-"""This component takes as input different sets of lines to define a dynamic relaxation (DR) process to find their equilibrium position.
 
-This is the first example of a (hopefully) running code.
 
-There are of course several things that need to be done:
+"""This component takes as input different sets of lines and points to define a dynamic relaxation (DR) process to find their equilibrium position.
+
+Several things need to be done:
    
-    TODO allow for different materials in same kind of elements (e.g. tow different bending stiffnesses) maybe as pairs sets [ [list,material],[otherlist]other material]]
-    TODO have a way to define generic materials (young modulus E + section area A + second moment of inertia I)(as a python class?)
     TODO add load elements as triple [position, direction, value]
 
-The code is heavily inspired by the TraerPhysics library for Processing by J. Traer and several amendments/improvements 
+The code is inspired by the TraerPhysics library for Processing by J. Traer and several amendments/improvements 
 made by Guillaume Labelle and Julien Nembrini in TraerAnar as a link to the ANAR+ library (http://anar.ch) 
 
 This code is copyrighted by Julien Nembrini and distributed open source in the sense of the Gnu GPL v3.0. 
@@ -92,6 +93,7 @@ def resetMaterials():
         matDval.append (materials.Branch(i)[5])
 
     #### apply material adjustments to elements
+
     for bending in allBendings:
         for bend in bending:
             matSpec = bend.getMaterialName()
@@ -104,7 +106,7 @@ def resetMaterials():
 #@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 #@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-print 'A prototype for dynamic relaxation in Rhino/GH/python. (c) Julien Nembrini'
+print 'A prototype for dynamic relaxation in Rhino/GH/python. (c) Julien Nembrini and Paul Nicholas'
 
 #print sys.path
 
@@ -138,7 +140,7 @@ if reset :
         matIval.append (materials.Branch(i)[3])
         matCval.append (materials.Branch(i)[4])
         matDval.append (materials.Branch(i)[5])
-
+        
     #### bending elements
     allBendings = [] 
     allBendingsParts = [] 
@@ -216,10 +218,10 @@ if reset :
     #DynamicRelaxation.makeAttractionsFromList(ps, makePtsFromRhino(pts),100)
     
     cPoints = []
-    for pt in pinnedPoints:
-        if pt is not None: cPoints.append (pt)
-    if len(cPoints)>0:
-        DynamicRelaxation.makeConstraintsFromList(ps,makePtsFromRhino(cPoints))
+    #for pt in pinnedPoints:
+    #    if pt is not None: cPoints.append (pt)
+    #if len(cPoints)>0:
+    #    DynamicRelaxation.makeConstraintsFromList(ps,makePtsFromRhino(cPoints))
     
     # pin constrained points
     for pt in pinnedPoints:
@@ -236,7 +238,7 @@ if reset :
             for j in itertools.islice(lineConstrainedPoints.Branch(i),1,None):
                 if j is not None: 
                     pts.append (j)
-            parts = DynamicRelaxation.makeConstraintsFromList(ps,makePtsFromRhino(pts),makePtFromRhino(vect), False)
+            parts = DynamicRelaxation.makeForceConstraintsFromList(ps,makePtsFromRhino(pts),makePtFromRhino(vect), False)
             allRailConstraints.append(parts)
     
     #### rail constrained points
@@ -248,7 +250,7 @@ if reset :
             for j in itertools.islice(railConstrainedPoints.Branch(i),1,None):
                 if j is not None: 
                     pts.append (rs.coerce3dpoint(j))
-            parts, springs = DynamicRelaxation.makeOutsideSpringConstraintsFromList(ps, makePtsFromRhino(pts),rail.apply, 1000, 0)
+            parts, springs = DynamicRelaxation.makePositionSpringConstraintsFromList(ps, makePtsFromRhino(pts),rail.apply, 1000, 0)
             allRailConstraints.append(parts)
 
     #### plane constrained points
@@ -260,10 +262,17 @@ if reset :
             for j in itertools.islice(planeConstrainedPoints.Branch(i),1,None):
                 if j is not None: 
                     pts.append (j)
-            parts = DynamicRelaxation.makeConstraintsFromList(ps,makePtsFromRhino(pts),plVect)
+            parts = DynamicRelaxation.makeForceConstraintsFromList(ps,makePtsFromRhino(pts),plVect)
             allPlaneConstraintPoints.append(parts)
 
     stepCount = 0
+
+#@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+#@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+
+#check for initialization
+initialized = 'stepCount' in locals() or 'stepCount' in globals()
     
 #@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 #@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -273,9 +282,10 @@ if reset :
 #adjustment of material parameters during simulation
 
 if adjust:
-    resetMaterials()
-    resetLoad()
-    #### TODO import other parameters
+    if initialized:
+        resetMaterials()
+        resetLoad()
+        #### TODO import other parameters
 
 #@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 #@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -301,69 +311,71 @@ if run:
 
 #center = Rhino.Geometry.Point3d((supportPtsIn[0].X + supportPtsIn[1].X) * .5, (supportPtsIn[0].Y + supportPtsIn[1].Y) * .5, (supportPtsIn[0].Z + supportPtsIn[1].Z) * .5)
 
-beamsOUT = DataTree[Rhino.Geometry.PolylineCurve]()
-trussesOUT = DataTree[Rhino.Geometry.PolylineCurve]()
-cablesOUT = DataTree[Rhino.Geometry.PolylineCurve]()
-stressOUT = DataTree[float]()
-stressSort = []
-stressMinMax = []
-loadsOUT = DataTree[Rhino.Geometry.Point3d]()
-loadsDirOUT = DataTree[Rhino.Geometry.Vector3d]()
-# compare bending force between top and bottom of arch 
-for i in range(len(allBendings)):
-    path = GH_Path(i)
-    for j in range(0, len(allBendings[i])+1):
-        if j == 0:
-            tmpStress = allBendings[i][j].getStress()
-        elif j == len(allBendings[i]):
-            tmpStress = allBendings[i][j-1].getStress()
-        else:
-            tmpStress = (allBendings[i][j].getStress()+allBendings[i][j-1].getStress())*0.5
-        stressOUT.Add(tmpStress, path)
-        stressSort.append(tmpStress)
+if initialized:
 
-if len(stressSort)>0:
-    stressSort.sort()
-    stressMinMax.append(stressSort[0])
-    stressMinMax.append(stressSort[-1])
+    beamsOUT = DataTree[Rhino.Geometry.PolylineCurve]()
+    trussesOUT = DataTree[Rhino.Geometry.PolylineCurve]()
+    cablesOUT = DataTree[Rhino.Geometry.PolylineCurve]()
+    stressOUT = DataTree[float]()
+    stressSort = []
+    stressMinMax = []
+    loadsOUT = DataTree[Rhino.Geometry.Point3d]()
+    loadsDirOUT = DataTree[Rhino.Geometry.Vector3d]()
+    # compare bending force between top and bottom of arch 
+    for i in range(len(allBendings)):
+        path = GH_Path(i)
+        for j in range(0, len(allBendings[i])+1):
+            if j == 0:
+                tmpStress = allBendings[i][j].getStress()
+            elif j == len(allBendings[i]):
+                tmpStress = allBendings[i][j-1].getStress()
+            else:
+                tmpStress = (allBendings[i][j].getStress()+allBendings[i][j-1].getStress())*0.5
+            stressOUT.Add(tmpStress, path)
+            stressSort.append(tmpStress)
 
-for i in range(len(allBendingsParts)):
-    path = GH_Path(i)
-    parts = []
-    for p in allBendingsParts[i] :
+    if len(stressSort)>0:
+        stressSort.sort()
+        stressMinMax.append(stressSort[0])
+        stressMinMax.append(stressSort[-1])
+
+    for i in range(len(allBendingsParts)):
+        path = GH_Path(i)
+        parts = []
+        for p in allBendingsParts[i] :
+            part = Rhino.Geometry.Point3d(p.position.x(), p.position.y(), p.position.z())
+            parts.append(part)
+        beamsOUT.Add(Rhino.Geometry.PolylineCurve(parts), path)
+
+    for i in range(len(allElasticsParts)):
+        path = GH_Path(i)
+        parts = []
+        for p in allElasticsParts[i] :
+            part = Rhino.Geometry.Point3d(p.position.x(), p.position.y(), p.position.z())
+            parts.append(part)
+        trussesOUT.Add(Rhino.Geometry.PolylineCurve(parts), path)
+
+    for i in range(len(allCablesParts)):
+        path = GH_Path(i)
+        parts = []
+        for p in allCablesParts[i]:
+            part = Rhino.Geometry.Point3d(p.position.x(), p.position.y(), p.position.z())
+            parts.append(part)
+        cablesOUT.Add(Rhino.Geometry.PolylineCurve(parts), path)
+
+    particles = []
+    for p in ps.particles:
         part = Rhino.Geometry.Point3d(p.position.x(), p.position.y(), p.position.z())
-        parts.append(part)
-    beamsOUT.Add(Rhino.Geometry.PolylineCurve(parts), path)
+        particles.append(part)
 
-for i in range(len(allElasticsParts)):
-    path = GH_Path(i)
-    parts = []
-    for p in allElasticsParts[i] :
-        part = Rhino.Geometry.Point3d(p.position.x(), p.position.y(), p.position.z())
-        parts.append(part)
-    trussesOUT.Add(Rhino.Geometry.PolylineCurve(parts), path)
+    for i in range(len(allLoads)):
+        path = GH_Path(i)
+        parts = []
+        for l in allLoads[i]: 
+            p = l.getParticle()
+            loadsOUT.Add(Rhino.Geometry.Point3d(p.position.x(), p.position.y(), p.position.z()), path)
+            loadsDirOUT.Add(Rhino.Geometry.Vector3d(makeVecfromPoint3D(l.getDirection())), path)
+    #curveOut = Rhino.Geometry.PolylineCurve(pts)
 
-for i in range(len(allCablesParts)):
-    path = GH_Path(i)
-    parts = []
-    for p in allCablesParts[i]:
-        part = Rhino.Geometry.Point3d(p.position.x(), p.position.y(), p.position.z())
-        parts.append(part)
-    cablesOUT.Add(Rhino.Geometry.PolylineCurve(parts), path)
-
-particles = []
-for p in ps.particles:
-    part = Rhino.Geometry.Point3d(p.position.x(), p.position.y(), p.position.z())
-    particles.append(part)
-
-for i in range(len(allLoads)):
-    path = GH_Path(i)
-    parts = []
-    for l in allLoads[i]: 
-        p = l.getParticle()
-        loadsOUT.Add(Rhino.Geometry.Point3d(p.position.x(), p.position.y(), p.position.z()), path)
-        loadsDirOUT.Add(Rhino.Geometry.Vector3d(makeVecfromPoint3D(l.getDirection())), path)
-#curveOut = Rhino.Geometry.PolylineCurve(pts)
-
-stepCounter = stepCount
+    stepCounter = stepCount
 

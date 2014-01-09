@@ -1026,7 +1026,7 @@ class LineConstraint(object):
     def apply(self,v):
         return v.force.projectDir(self.dir)
     
-def makeConstraintsFromList( ps, pts, vector = Point3D(0,0,1), onPlane = True, mergeExistingParticles = True):
+def makeForceConstraintsFromList( ps, pts, vector = Point3D(0,0,1), onPlane = True, mergeExistingParticles = True):
     
     particles = mergeParticles(ps,pts,mergeExistingParticles)
     
@@ -1044,7 +1044,7 @@ def makeConstraintsFromList( ps, pts, vector = Point3D(0,0,1), onPlane = True, m
     
     return particles,constraint
 
-def makeOutsideConstraintsFromList( ps, pts, outsideFunc = None, mergeExistingParticles = True):
+def makePositionConstraintsFromList( ps, pts, outsideFunc = None, mergeExistingParticles = True):
     
     particles = mergeParticles(ps,pts,mergeExistingParticles)
     for p in particles:
@@ -1055,7 +1055,7 @@ def makeOutsideConstraintsFromList( ps, pts, outsideFunc = None, mergeExistingPa
     
     return particles
   
-def makeOutsideSpringConstraintsFromList( ps, pts, outsideFunc = None, K=100,damp=0.1, mergeExistingParticles = True):
+def makePositionSpringConstraintsFromList( ps, pts, outsideFunc = None, K=100,damp=0.1, mergeExistingParticles = True):
     
     particles = mergeParticles(ps,pts,mergeExistingParticles)
     springs = []
