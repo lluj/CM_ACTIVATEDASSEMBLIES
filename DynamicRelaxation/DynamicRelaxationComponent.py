@@ -4,7 +4,6 @@ import rhinoscriptsyntax as rs
 import sys
 
 import DynamicRelaxation
-from DynamicRelaxationPreSpecMaterials import Materials
 
 import itertools
 import System.Guid
@@ -19,12 +18,14 @@ from Grasshopper import DataTree
 
 Several things need to be done:
    
-    TODO add load elements as triple [position, direction, value]
+    TODO visualization part must be developed
+    TODO load vector display is not working any more
+    
 
 The code is inspired by the TraerPhysics library for Processing by J. Traer and several amendments/improvements 
 made by Guillaume Labelle and Julien Nembrini in TraerAnar as a link to the ANAR+ library (http://anar.ch) 
 
-This code is copyrighted by Julien Nembrini and distributed open source in the sense of the Gnu GPL v3.0. 
+This code is copyrighted by Julien Nembrini and  Paul Nicholas. It is distributed open source in the sense of the Gnu GPL v3.0. 
 
 """
 
@@ -146,7 +147,7 @@ if reset :
     allBendingsParts = [] 
     for i in range(beams.BranchCount):
         matSpec = beams.Branch(i)[0]
-        if type (matSpec) == str:
+        if type (matSpec) == str and matSpec in matName:
             for j in itertools.islice(beams.Branch(i),1,None):
                 if type(j) is System.Guid:
                     pts = rs.PolylineVertices(j)
@@ -158,7 +159,9 @@ if reset :
                         # keep a copy for display of the particles making a bending line
                         allBendingsParts.append(parts)
                         allBendings.append(bends)
-        else: print 'problem with beam material definitions'
+        else: 
+            print 'problem with beam material definitions'
+            if matSpec not in matName: print 'check that the material names are correctly defined'
     print 'bendings :' + str(len(ps.bendings))
 
     #### elastic elements
@@ -167,7 +170,7 @@ if reset :
     
     for i in range(trusses.BranchCount):
         matSpec = trusses.Branch(i)[0]
-        if type (matSpec) == str:
+        if type (matSpec) == str and matSpec in matName:
             for j in itertools.islice(trusses.Branch(i),1,None):
                 if type(j) is System.Guid:
                     pts = rs.PolylineVertices(j)
@@ -177,7 +180,9 @@ if reset :
                         # keep a copy for display of the particles making a bending line
                         allElasticsParts.append(parts)
                         allElastics.append(elas)
-        else: print 'problem with truss material definitions'
+        else: 
+            print 'problem with beam material definitions'
+            if matSpec not in matName: print 'check that the material names are correctly defined'
     print 'trusses :' + str(len(ps.elastics))
 
     #### cables elements
@@ -186,7 +191,7 @@ if reset :
 
     for i in range(cables.BranchCount):
         matSpec = cables.Branch(i)[0]
-        if type (matSpec) == str:
+        if type (matSpec) == str and matSpec in matName:
             for j in itertools.islice(cables.Branch(i),1,None):
                 if type(j) is System.Guid:
                     pts = rs.PolylineVertices(j)
@@ -194,7 +199,9 @@ if reset :
                         parts,cabls = DynamicRelaxation.makeCablesFromList(ps, makePtsFromRhino(pts), matEval[matName.index(matSpec)], matAval[matName.index(matSpec)], 0,  matCval[matName.index(matSpec)])
                         allCablesParts.append(parts)
                         allCables.append(cabls)
-        else: print 'problem with cable material definitions'
+        else: 
+            print 'problem with beam material definitions'
+            if matSpec not in matName: print 'check that the material names are correctly defined'
     print 'cables :' + str(len(ps.cables))
     
     #### loads
@@ -217,15 +224,11 @@ if reset :
     # TODO make a construction loop for the remaining kind of elements
     #DynamicRelaxation.makeAttractionsFromList(ps, makePtsFromRhino(pts),100)
     
-    cPoints = []
-    #for pt in pinnedPoints:
-    #    if pt is not None: cPoints.append (pt)
-    #if len(cPoints)>0:
-    #    DynamicRelaxation.makeConstraintsFromList(ps,makePtsFromRhino(cPoints))
-    
+    cPoints = []    
     # pin constrained points
     for pt in pinnedPoints:
         if pt is not None:
+            cPoints.append(pt)
             ps.findParticleEqualToPoint(makePtFromRhino(pt)).makeFixed()
     print 'particles :' + str(len(ps.particles))
 
