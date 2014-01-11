@@ -1,6 +1,7 @@
 # FileName 'DynamicRelaxation.py'
 
 import math
+import logging, logging.handlers
 
 #@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 #@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -189,6 +190,15 @@ class ParticleSystem(object):
         self.loads = []
         self.customForces = []
         
+        self.logger = logging.getLogger("logfun")
+        
+        # This handler writes everything to a file.
+        h = logging.StreamHandler()
+        f = logging.Formatter("%(levelname)s %(asctime)s %(funcName)s %(lineno)d %(message)s")
+        h.setFormatter(f)
+        h.setLevel(logging.DEBUG)
+        self.logger.addHandler(h)
+        
     def setIntegrator(self, integrator ) :
         if integrator == ParticleSystem.RUNGE_KUTTA:
             self.integrator =  RungeKuttaIntegrator( self )
@@ -244,7 +254,9 @@ class ParticleSystem(object):
     def findParticleEqualToPoint(self,v) :
         for p in self.particles :
             #print str(p.position) + str (v) 
-            if p.position == v :
+            #logfun = logging.getLogger("logfun")
+            #logfun.debug("Inside findParticles")
+            if p.position.distanceSquaredTo(v) < Point3D.EPSILON :
                 return p
         return None
         
@@ -976,7 +988,7 @@ def makeCablesFromList( ps, pts, E = 10, A = 123, t0 = 0, lengthCoeff=1, closed 
     return (particles, cables)
 
 def makeBendingsFromList( ps, pts, E = 28000e06, I =7e-09 , A =2.01062e-04, r=0.02, closed = False, mergeExistingParticles = True):
-    
+        
     particles = mergeParticles(ps,pts,mergeExistingParticles)
     bendings = []
     for i in range(len(particles)-2):

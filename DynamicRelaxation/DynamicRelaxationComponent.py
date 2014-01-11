@@ -13,6 +13,7 @@ clr.AddReference("Grasshopper")
 from Grasshopper.Kernel.Data import GH_Path
 from Grasshopper import DataTree
 
+import logging
 
 """This component takes as input different sets of lines and points to define a dynamic relaxation (DR) process to find their equilibrium position.
 
@@ -109,6 +110,7 @@ def resetMaterials():
 
 print 'A prototype for dynamic relaxation in Rhino/GH/python. (c) Julien Nembrini and Paul Nicholas'
 
+logging.basicConfig(level=logging.DEBUG)
 #print sys.path
 
 #@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -125,7 +127,7 @@ if reset :
     #ps.setIntegrator(DynamicRelaxation.ParticleSystem.EULER)
 
     print ps
-
+    
     #### materials
     matName = []
     matEval = []
