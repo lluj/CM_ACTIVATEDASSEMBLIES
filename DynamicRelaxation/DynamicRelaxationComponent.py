@@ -183,7 +183,7 @@ if reset :
                         allElasticsParts.append(parts)
                         allElastics.append(elas)
         else: 
-            print 'problem with beam material definitions'
+            print 'problem with truss material definitions'
             if matSpec not in matName: print 'check that the material names are correctly defined'
     print 'trusses :' + str(len(ps.elastics))
 
@@ -202,7 +202,7 @@ if reset :
                         allCablesParts.append(parts)
                         allCables.append(cabls)
         else: 
-            print 'problem with beam material definitions'
+            print 'problem with cable material definitions'
             if matSpec not in matName: print 'check that the material names are correctly defined'
     print 'cables :' + str(len(ps.cables))
     
