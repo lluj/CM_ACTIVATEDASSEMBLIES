@@ -244,7 +244,7 @@ if reset :
                 if j is not None: 
                     pts.append (j)
             parts = DynamicRelaxation.makeForceConstraintsFromList(ps,makePtsFromRhino(pts),makePtFromRhino(vect), False)
-            allRailConstraints.append(parts)
+            allLineConstraints.append(parts)
     
     #### rail constrained points
     allRailConstraints = [] 
@@ -326,6 +326,8 @@ if initialized:
     stressMinMax = []
     loadsOUT = DataTree[Rhino.Geometry.Point3d]()
     loadsDirOUT = DataTree[Rhino.Geometry.Vector3d]()
+    
+    fixedPointsOUT = cPoints
     # compare bending force between top and bottom of arch 
     for i in range(len(allBendings)):
         path = GH_Path(i)
