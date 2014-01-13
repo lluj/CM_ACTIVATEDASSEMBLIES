@@ -13,6 +13,7 @@ clr.AddReference("Grasshopper")
 from Grasshopper.Kernel.Data import GH_Path
 from Grasshopper import DataTree
 
+import logging
 
 """This component takes as input different sets of lines and points to define a dynamic relaxation (DR) process to find their equilibrium position.
 
@@ -109,6 +110,7 @@ def resetMaterials():
 
 print 'A prototype for dynamic relaxation in Rhino/GH/python. (c) Julien Nembrini and Paul Nicholas'
 
+logging.basicConfig(level=logging.DEBUG)
 #print sys.path
 
 #@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -125,7 +127,7 @@ if reset :
     #ps.setIntegrator(DynamicRelaxation.ParticleSystem.EULER)
 
     print ps
-
+    
     #### materials
     matName = []
     matEval = []
@@ -181,7 +183,7 @@ if reset :
                         allElasticsParts.append(parts)
                         allElastics.append(elas)
         else: 
-            print 'problem with beam material definitions'
+            print 'problem with truss material definitions'
             if matSpec not in matName: print 'check that the material names are correctly defined'
     print 'trusses :' + str(len(ps.elastics))
 
@@ -200,7 +202,7 @@ if reset :
                         allCablesParts.append(parts)
                         allCables.append(cabls)
         else: 
-            print 'problem with beam material definitions'
+            print 'problem with cable material definitions'
             if matSpec not in matName: print 'check that the material names are correctly defined'
     print 'cables :' + str(len(ps.cables))
     
@@ -242,7 +244,7 @@ if reset :
                 if j is not None: 
                     pts.append (j)
             parts = DynamicRelaxation.makeForceConstraintsFromList(ps,makePtsFromRhino(pts),makePtFromRhino(vect), False)
-            allRailConstraints.append(parts)
+            allLineConstraints.append(parts)
     
     #### rail constrained points
     allRailConstraints = [] 
@@ -324,6 +326,8 @@ if initialized:
     stressMinMax = []
     loadsOUT = DataTree[Rhino.Geometry.Point3d]()
     loadsDirOUT = DataTree[Rhino.Geometry.Vector3d]()
+    
+    fixedPointsOUT = cPoints
     # compare bending force between top and bottom of arch 
     for i in range(len(allBendings)):
         path = GH_Path(i)
