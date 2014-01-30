@@ -230,8 +230,13 @@ if reset :
     # pin constrained points
     for pt in pinnedPoints:
         if pt is not None:
-            cPoints.append(pt)
-            ps.findParticleEqualToPoint(makePtFromRhino(pt)).makeFixed()
+            # find corresponding particle in existing ones
+            part = ps.findParticleEqualToPoint(makePtFromRhino(pt))
+            if part is not None:
+                part.makeFixed()
+                cPoints.append(pt)
+            else :
+                print 'fixed point does not correspond to particle :' + str(pt)
     print 'particles :' + str(len(ps.particles))
 
     #### line constrained points
