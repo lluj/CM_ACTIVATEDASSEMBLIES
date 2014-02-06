@@ -110,6 +110,9 @@ def resetMaterials():
 
 print 'A prototype for dynamic relaxation in Rhino/GH/python. (c) Julien Nembrini and Paul Nicholas'
 
+DynamicRelaxation.Point3D.EPSILON = pow(10,-Epsilon)
+print 'Merging particle tolerance '+str(DynamicRelaxation.Point3D.EPSILON )
+
 logging.basicConfig(level=logging.DEBUG)
 #print sys.path
 
