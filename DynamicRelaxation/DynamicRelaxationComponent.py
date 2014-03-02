@@ -330,13 +330,22 @@ if initialized:
     trussesOUT = DataTree[Rhino.Geometry.PolylineCurve]()
     cablesOUT = DataTree[Rhino.Geometry.PolylineCurve]()
     stressOUT = DataTree[float]()
-    stressSort = []
-    stressMinMax = []
+    
+    beamStressOUT = DataTree[float]()
+    cableStressOUT = DataTree[float]()
+    trussStressOUT = DataTree[float]()
+    
+    stressBeamMinMax = []
+    stressCableMinMax = []
+    stressTrussMinMax = []
+    
     loadsOUT = DataTree[Rhino.Geometry.Point3d]()
     loadsDirOUT = DataTree[Rhino.Geometry.Vector3d]()
     
     fixedPointsOUT = cPoints
+    
     # compare bending force between top and bottom of arch 
+    stressSort = []
     for i in range(len(allBendings)):
         path = GH_Path(i)
         for j in range(0, len(allBendings[i])+1):
@@ -346,13 +355,42 @@ if initialized:
                 tmpStress = allBendings[i][j-1].getStress()
             else:
                 tmpStress = (allBendings[i][j].getStress()+allBendings[i][j-1].getStress())*0.5
-            stressOUT.Add(tmpStress, path)
+            beamStressOUT.Add(tmpStress, path)
             stressSort.append(tmpStress)
 
     if len(stressSort)>0:
         stressSort.sort()
-        stressMinMax.append(stressSort[0])
-        stressMinMax.append(stressSort[-1])
+        stressBeamMinMax.append(stressSort[0])
+        stressBeamMinMax.append(stressSort[-1])
+
+
+    stressSort = []
+    for i in range(len(allCables)):
+        path = GH_Path(i)
+        for cable in allCables[i]:
+            tmpStress = cable.getStress()
+            cableStressOUT.Add(tmpStress, path)
+            stressSort.append(tmpStress)
+            
+    if len(stressSort)>0:
+        stressSort.sort()
+        stressCableMinMax.append(stressSort[0])
+        stressCableMinMax.append(stressSort[-1])
+
+    stressSort = []
+    for i in range(len(allElastics)):
+        path = GH_Path(i)
+        for truss in allElastics[i]:
+            tmpStress = truss.getStress()
+            trussStressOUT.Add(tmpStress, path)
+            stressSort.append(tmpStress)
+            
+    if len(stressSort)>0:
+        stressSort.sort()
+        stressTrussMinMax.append(stressSort[0])
+        stressTrussMinMax.append(stressSort[-1])
+    
+         
 
     for i in range(len(allBendingsParts)):
         path = GH_Path(i)
