@@ -24,22 +24,28 @@ for preset in preSpecified:
     elif preset == 1:#GFRP_D3
         for i in mat.gfrp(NAME = 'GFRP_D3', A = 7.068375, I = 3.976078, D = 1.5):
             PreSpecMatList.Add(i, GH_Path(exLength))
-    elif preset ==2:#STEEL_D2
+    elif preset == 2:#GFRP_D6
+        for i in mat.gfrp(NAME = 'GFRP_D6', A = 28.2735, I = 63.617251, D = 3):
+            PreSpecMatList.Add(i, GH_Path(exLength))
+    elif preset == 3:#GFRP_D10
+        for i in mat.gfrp(NAME = 'GFRP_D10', A = 78.5375, I = 490.873852, D = 3):
+            PreSpecMatList.Add(i, GH_Path(exLength))
+    elif preset == 4:#STEEL_D2
         for i in mat.steel(NAME = 'STEEL_D2', A = 3.1415, I = 0.78539, D = 1):
             PreSpecMatList.Add(i, GH_Path(exLength))
-    elif preset ==3:#RATTAN_D6
+    elif preset == 5:#RATTAN_D6
         for i in mat.rattan(NAME = 'RATTAN_D6', A = 28.2735, I = 63.617251, D = 3):
             PreSpecMatList.Add(i, GH_Path(exLength))
-    elif preset ==4:#RATTAN_D10
+    elif preset == 6:#RATTAN_D10
         for i in mat.rattan(NAME = 'RATTAN_D10', A = 78.5375, I = 490.873852, D = 5):
             PreSpecMatList.Add(i, GH_Path(exLength))
-    elif preset ==5:#WOOD_2*20
+    elif preset == 7:#WOOD_2*20
         for i in mat.wood(NAME = 'WOOD_2x20', A = 40, I = 13.333333, D = 1):
             PreSpecMatList.Add(i, GH_Path(exLength))
-    elif preset ==6:#MEMBRANE
+    elif preset == 8:#MEMBRANE
         for i in mat.membrane(NAME = 'MEMBRANE', A = 0.01, C = 0.9):
             PreSpecMatList.Add(i, GH_Path(exLength))
-    elif preset ==7:#PVC
+    elif preset == 9:#PVC
         for i in mat.pvc(NAME = 'PVC_D2', A = 3.1415, I = 0.78539, D = 1):
             PreSpecMatList.Add(i, GH_Path(exLength))
         

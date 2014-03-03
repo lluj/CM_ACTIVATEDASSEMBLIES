@@ -701,7 +701,7 @@ class Cable(Elastic) :
             a2bDistance = math.sqrt( a2b.dot(a2b) )
             
             # check if cable is slack
-            if ( a2bDistance >= self.l0*self.l0coeff ) :
+            if ( a2bDistance >= self.l0*self.l0coeff ) and (a2bDistance > 0) :
                 slack = False;
                 
                 a2b = a2b.divideBy(a2bDistance)
