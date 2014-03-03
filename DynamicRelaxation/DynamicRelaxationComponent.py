@@ -214,17 +214,21 @@ if reset :
     allLoadsParts = [] 
 
     for i in range(loads.BranchCount):
-        dir = loads.Branch(i)[0]
-        force = loads.Branch(i)[1]
-        pts = []
-        for j in itertools.islice(loads.Branch(i),2,None):
-            if j is not None: 
-                pts.append (j)
-        parts,lds = DynamicRelaxation.makeLoadsFromList(ps, makePtsFromRhino(pts),makePtFromRhino(dir),force.X)
-        allLoadsParts.append(parts)
-        allLoads.append(lds)
-        
+        print loads.Branch(i)
+        if list(loads.Branch(i)) :
+            dir = loads.Branch(i)[0]
+            force = loads.Branch(i)[1]
+            pts = []
+            for j in itertools.islice(loads.Branch(i),2,None):
+                if j is not None: 
+                    pts.append (j)
+            parts,lds = DynamicRelaxation.makeLoadsFromList(ps, makePtsFromRhino(pts),makePtFromRhino(dir),force.X)
+            allLoadsParts.append(parts)
+            allLoads.append(lds)
+        else:
+            print "some loads are not defined"
     print 'loads :' + str(len(ps.loads))
+   
     
     # TODO make a construction loop for the remaining kind of elements
     #DynamicRelaxation.makeAttractionsFromList(ps, makePtsFromRhino(pts),100)
